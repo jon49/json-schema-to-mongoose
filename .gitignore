@@ -8,3 +8,4 @@ bin
 *.suo
 *.njsproj
 *.tmp
+*.dat
