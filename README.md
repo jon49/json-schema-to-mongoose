@@ -14,8 +14,14 @@ conversion.
 ## Usage
 
 ```typescript
+/// <reference path="../node_modules/json-schema-to-mongoose/json-schema-to-mongoose.d.ts" />
+
 import createMongooseSchema = require('./lib/json-schema')
 import util = require('util')
+
+// Or use plain javascript
+// var createMongooseSchema = require('./lib/json-schema')
+// var util = require('util')
 
 // example json-schema references
 var refs =
@@ -73,4 +79,7 @@ var mongooseSchema = createMongooseSchema(refs, schema)
 // }, []))
 
 console.log(util.inspect(mongooseSchema, false, null))
+
+var Schema = new mongoose.Schema(mongooseSchema)
+
 ```
