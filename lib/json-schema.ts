@@ -31,8 +31,12 @@ var schemaParamsToMongoose =
     */
     default: (default_: string) =>
     {
+        var func = _.last(/^\[Function=(.+)\]$/.exec(default_))
+            .replace(/\\_/g, '`underscore`')
+            .replace(/_/g, ' ')
+            .replace(/`underscore`/g, '_')
         return {
-            default: eval(_.last(/^\[Function=(.+)\]$/.exec(default_))) || default_
+            default: eval(func) || default_
         }
     },
 
