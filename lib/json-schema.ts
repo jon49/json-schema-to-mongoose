@@ -31,7 +31,7 @@ var schemaParamsToMongoose =
     */
     default: (default_: string) =>
     {
-        var func = _.last(/^\[Function=(.+)\]$/.exec(default_))
+        var func = (_.last(/^\[Function=(.+)\]$/.exec(default_)) || '')
             .replace(/\\_/g, '`underscore`')
             .replace(/_/g, ' ')
             .replace(/`underscore`/g, '_')
@@ -97,7 +97,7 @@ var convert = (refSchemas: any, jsonSchema: any): any =>
             )
 
         : (jsonSchema.type === 'array')?
-            !_.isEmpty(jsonSchema.items)? convert(refSchemas, jsonSchema.items): []
+            !_.isEmpty(jsonSchema.items)? [convert(refSchemas, jsonSchema.items)]: []
 
         : unsupportedJsonSchema(jsonSchema)
     )

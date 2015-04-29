@@ -7,21 +7,11 @@ var Schema = mongoose.Schema;
 describe('mongoose schema conversion:', function () {
     describe('createMongooseSchema', function () {
         _.each([
-            {
-                type: 'objectttttt'
-            },
-            {
-                type: 'object',
-                properties: 'not an object'
-            },
-            {
-                type: 'object',
-                properties: {
-                    email: {
-                        type: 'not a type'
-                    }
-                }
-            }
+            { type: 'objectttttt' },
+            { type: 'object', properties: 'not an object' },
+            { type: 'object', properties: {
+                email: { type: 'not a type' }
+            } }
         ], function (invalid) {
             it('throws when the incorrect type is given', function () {
                 expect(function () {
@@ -29,16 +19,12 @@ describe('mongoose schema conversion:', function () {
                 }).toThrowError(/Unsupported JSON schema/);
             });
         });
-        _.each([
-            {
-                type: 'object',
-                properties: {
-                    id: {
-                        $ref: '#/nope/nope/nope'
-                    }
-                }
+        _.each([{
+            type: 'object',
+            properties: {
+                id: { $ref: '#/nope/nope/nope' }
             }
-        ], function (invalid) {
+        }], function (invalid) {
             it("throws on unsupported ref, " + invalid, function () {
                 expect(function () {
                     createMongooseSchema(void 0, invalid);
@@ -51,21 +37,29 @@ describe('mongoose schema conversion:', function () {
                     type: 'string',
                     pattern: '^\\d{3}$'
                 },
+                a: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            num: { type: 'number' },
+                            str: { type: 'string' }
+                        }
+                    }
+                },
                 idSpec: {
                     type: 'object',
                     properties: {
-                        id: {
-                            $ref: 'yep'
-                        }
+                        id: { $ref: 'yep' },
+                        arr: { $ref: 'a' }
                     }
                 }
             };
             var valid = {
                 type: 'object',
                 properties: {
-                    id: {
-                        $ref: 'yep'
-                    },
+                    id: { $ref: 'yep' },
+                    arr: { $ref: 'a' },
                     address: {
                         type: 'object',
                         properties: {
@@ -76,21 +70,11 @@ describe('mongoose schema conversion:', function () {
                 }
             };
             expect(createMongooseSchema(refs, valid)).toEqual({
-                id: {
-                    type: String,
-                    match: /^\d{3}$/
-                },
+                id: { type: String, match: /^\d{3}$/ },
+                arr: [{ num: { type: Number }, str: { type: String } }],
                 address: {
-                    street: {
-                        type: Number,
-                        default: 44,
-                        min: 0,
-                        max: 50
-                    },
-                    houseColor: {
-                        type: Date,
-                        default: Date.now
-                    }
+                    street: { type: Number, default: 44, min: 0, max: 50 },
+                    houseColor: { type: Date, default: Date.now }
                 }
             });
         });
