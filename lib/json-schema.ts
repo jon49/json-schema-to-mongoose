@@ -3,18 +3,17 @@
 import mongoose = require('mongoose')
 import _ = require('lodash')
 
-var typeStringToMongooseType =
-{
+var typeStringToMongooseType = {
     'string': String,
     'boolean': Boolean,
     'number': Number,
     'integer': Number
 }
 
-var typeRefToMongooseType =
-{
+var typeRefToMongooseType = {
     '#/definitions/objectid': mongoose.Schema.Types.ObjectId,
     '#/definitions/dateOrDatetime': Date
+    
 }
 
 var subSchemaType = (parentSchema, subschema, key) =>
@@ -54,16 +53,19 @@ var schemaParamsToMongoose =
     enum: (members: any[]) => { return {enum: members} }
 }
 
-var toMongooseParams = (acc, val, key) =>
-{
+var toMongooseParams = (acc, val, key) => {
     var func
     return (func = schemaParamsToMongoose[key])? _.assign(acc, func(val)): acc
 }
 
 var unsupportedRefValue = (jsonSchema) => { throw new Error("Unsupported $ref value: " + jsonSchema.$ref) }
 var unsupportedJsonSchema = (jsonSchema) => { throw new Error('Unsupported JSON schema type, `' + jsonSchema.type + '`') }
-var convert = (refSchemas: any, jsonSchema: any): any =>
-{
+var convert = (refSchemas: any, jsonSchema: any): any => {
+
+    if (!_.isPlainObject(jsonSchema)) {
+        unsupportedJsonSchema(jsonSchema)
+    }
+
     var converted,
         result,
         format = jsonSchema.format,
@@ -74,37 +76,39 @@ var convert = (refSchemas: any, jsonSchema: any): any =>
         subSchema = _.isEmpty(refSchemas)? false: refSchemas[jsonSchema.$ref]
 
     return (result =
-        isRef?
-            isMongooseRef? mongooseRef
+        isRef
+            ? isMongooseRef? mongooseRef
             : subSchema? convert(refSchemas, subSchema)
             : unsupportedRefValue(jsonSchema)
 
-        : isTypeDate? _.reduce
-                (
-                    <any> _.omit(jsonSchema, 'type', 'format'),
-                    toMongooseParams,
-                    {type: typeRefToMongooseType['#/definitions/dateOrDatetime']}
-                )
+        : isTypeDate
+            ? _.reduce (
+                <any> _.omit(jsonSchema, 'type', 'format'),
+                toMongooseParams,
+                {type: typeRefToMongooseType['#/definitions/dateOrDatetime']} )
 
-        : _.has(typeStringToMongooseType, jsonSchema.type)?
-                _.reduce(jsonSchema, toMongooseParams, {})
+        : _.has(typeStringToMongooseType, jsonSchema.type)
+            ? _.reduce(jsonSchema, toMongooseParams, {})
 
-        : (jsonSchema.type === 'object')?
-            _.isEmpty(jsonSchema.properties)? mongoose.Schema.Types.Mixed
-            : (
-                converted = _.mapValues(jsonSchema.properties, convert.bind(null, refSchemas)),
-                jsonSchema.required? (_.mapValues(converted, subSchemaType.bind(null, jsonSchema))): converted
-            )
+        : (jsonSchema.type === 'object')
+            ? _.isEmpty(jsonSchema.properties)
+                ? mongoose.Schema.Types.Mixed
+            : ( converted = _.mapValues(jsonSchema.properties, convert.bind(null, refSchemas)),
+                jsonSchema.required? (_.mapValues(converted, subSchemaType.bind(null, jsonSchema))): converted )
 
-        : (jsonSchema.type === 'array')?
-            !_.isEmpty(jsonSchema.items)? [convert(refSchemas, jsonSchema.items)]: []
+        : (jsonSchema.type === 'array')
+            ? !_.isEmpty(jsonSchema.items)
+                ? [convert(refSchemas, jsonSchema.items)]
+            : []
+
+        : !_.has(jsonSchema, 'type')
+            ? mongoose.Schema.Types.Mixed
 
         : unsupportedJsonSchema(jsonSchema)
     )
 }
 
-interface CreateMongooseSchema
-{
+interface CreateMongooseSchema {
     (refSchemas: any, jsonSchema: any): any
     (refSchemas: any): (jsonSchema: any) => any
 }

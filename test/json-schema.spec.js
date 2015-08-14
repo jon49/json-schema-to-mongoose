@@ -9,34 +9,29 @@ describe('mongoose schema conversion:', function () {
         _.each([
             { type: 'objectttttt' },
             { type: 'object', properties: 'not an object' },
-            { type: 'object', properties: {
-                email: { type: 'not a type' }
-            } }
+            { type: 'object',
+                properties: {
+                    email: { type: 'not a type' }
+                } }
         ], function (invalid) {
             it('throws when the incorrect type is given', function () {
-                expect(function () {
-                    createMongooseSchema(void 0, invalid);
-                }).toThrowError(/Unsupported JSON schema/);
+                expect(function () { createMongooseSchema(void 0, invalid); }).toThrowError(/Unsupported JSON schema/);
             });
         });
         _.each([{
-            type: 'object',
-            properties: {
-                id: { $ref: '#/nope/nope/nope' }
-            }
-        }], function (invalid) {
+                type: 'object',
+                properties: {
+                    id: { $ref: '#/nope/nope/nope' }
+                } }], function (invalid) {
             it("throws on unsupported ref, " + invalid, function () {
-                expect(function () {
-                    createMongooseSchema(void 0, invalid);
-                }).toThrowError(/Unsupported .ref/);
+                expect(function () { createMongooseSchema(void 0, invalid); }).toThrowError(/Unsupported .ref/);
             });
         });
         it('should convert a valid json-schema', function () {
             var refs = {
                 yep: {
                     type: 'string',
-                    pattern: '^\\d{3}$'
-                },
+                    pattern: '^\\d{3}$' },
                 a: {
                     type: 'array',
                     items: {
@@ -44,39 +39,36 @@ describe('mongoose schema conversion:', function () {
                         properties: {
                             num: { type: 'number' },
                             str: { type: 'string' }
-                        }
-                    }
+                        } } },
+                anyValue: {
+                    description: 'This can be any value.'
                 },
                 idSpec: {
                     type: 'object',
                     properties: {
                         id: { $ref: 'yep' },
                         arr: { $ref: 'a' }
-                    }
-                }
-            };
+                    } } };
             var valid = {
                 type: 'object',
                 properties: {
                     id: { $ref: 'yep' },
                     arr: { $ref: 'a' },
+                    anyValue: { a: 'b' },
                     address: {
                         type: 'object',
                         properties: {
                             street: { type: 'integer', default: 44, minimum: 0, maximum: 50 },
                             houseColor: { type: 'string', default: '[Function=Date.now]', format: 'date-time' }
-                        }
-                    }
-                }
-            };
+                        } } } };
             expect(createMongooseSchema(refs, valid)).toEqual({
                 id: { type: String, match: /^\d{3}$/ },
                 arr: [{ num: { type: Number }, str: { type: String } }],
+                anyValue: mongoose.Schema.Types.Mixed,
                 address: {
                     street: { type: Number, default: 44, min: 0, max: 50 },
                     houseColor: { type: Date, default: Date.now }
-                }
-            });
+                } });
         });
     });
 });

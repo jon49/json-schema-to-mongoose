@@ -32,7 +32,7 @@ describe('mongoose schema conversion:', function() {
         })})
 
         it('should convert a valid json-schema', () => {
-                    
+
             var refs = {
                 yep: {
                     type: 'string',
@@ -45,6 +45,9 @@ describe('mongoose schema conversion:', function() {
                             num: {type: 'number'},
                             str: {type: 'string'}
                 }}},
+                anyValue: {
+                    description: 'This can be any value.'
+                },
                 idSpec: {
                     type: 'object',
                     properties: {
@@ -57,6 +60,7 @@ describe('mongoose schema conversion:', function() {
                 properties: {
                     id: {$ref: 'yep'},
                     arr: {$ref: 'a'},
+                    anyValue: {a: 'b'},
                     address: {
                         type: 'object',
                         properties: {
@@ -67,6 +71,7 @@ describe('mongoose schema conversion:', function() {
             expect(createMongooseSchema(refs, valid)).toEqual({
                 id: {type: String, match: /^\d{3}$/},
                 arr: [{num: {type: Number}, str: {type: String}}],
+                anyValue: mongoose.Schema.Types.Mixed,
                 address: {
                     street: {type: Number, default: 44, min: 0, max: 50},
                     houseColor: {type: Date, default: Date.now}
