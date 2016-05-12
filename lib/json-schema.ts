@@ -72,7 +72,7 @@ var convert = (refSchemas: any, jsonSchema: any): any => {
         isRef = !_.isEmpty(jsonSchema.$ref),
         isTypeDate = jsonSchema.type === 'string' && (format === 'date' || format === 'date-time'),
         mongooseRef = typeRefToMongooseType[jsonSchema.$ref],
-        isMongooseRef = !_.isEmpty(mongooseRef),
+        isMongooseRef = typeof(mongooseRef) != 'undefined' ? true : false,
         subSchema = _.isEmpty(refSchemas)? false: refSchemas[jsonSchema.$ref]
 
     return (result =
