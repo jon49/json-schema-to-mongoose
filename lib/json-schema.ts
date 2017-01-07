@@ -70,9 +70,6 @@ var toMongooseParams = (acc, val, key) => {
 var unsupportedRefValue = (jsonSchema) => { throw new Error("Unsupported $ref value: " + jsonSchema.$ref) }
 var unsupportedJsonSchema = (jsonSchema) => { throw new Error('Unsupported JSON schema type, `' + jsonSchema.type + '`') }
 var convert = (refSchemas: any, jsonSchema: any): any => {
-    if (!_.isPlainObject(jsonSchema)) {
-        unsupportedJsonSchema(jsonSchema);
-    }
     
     if (jsonSchema.$schema === 'http://json-schema.org/draft-03/schema#') {
         return convertV(3, refSchemas, jsonSchema);
