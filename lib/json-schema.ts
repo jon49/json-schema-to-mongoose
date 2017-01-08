@@ -16,11 +16,20 @@ var typeRefToMongooseType = {
     
 }
 
-var subSchemaType = (parentSchema, subschema, key) =>
+var subSchemaTypeV3 = (parentSchema, subschema, key) =>
 {
     return (parentSchema.required.indexOf(key) >= 0 && !_.isPlainObject(subschema))?
            { type: subschema, required: true }
            : subschema
+}
+
+var subSchemaTypeV4 = (parentSchema, subschema, key) =>
+{
+    return (parentSchema.required.indexOf(key) >= 0 )
+            ? !_.isPlainObject(subschema) 
+                ? { type: subschema, required: true }
+                : _.assign(subschema, {required: true})
+            : subschema
 }
 
 var schemaParamsToMongoose =
@@ -61,6 +70,20 @@ var toMongooseParams = (acc, val, key) => {
 var unsupportedRefValue = (jsonSchema) => { throw new Error("Unsupported $ref value: " + jsonSchema.$ref) }
 var unsupportedJsonSchema = (jsonSchema) => { throw new Error('Unsupported JSON schema type, `' + jsonSchema.type + '`') }
 var convert = (refSchemas: any, jsonSchema: any): any => {
+    
+    if (jsonSchema.$schema === 'http://json-schema.org/draft-03/schema#') {
+        return convertV(3, refSchemas, jsonSchema);
+    }
+    else if (jsonSchema.$schema === 'http://json-schema.org/draft-04/schema#') {
+        return convertV(4, refSchemas, jsonSchema);
+    }
+    // backwards compatibility
+    else {
+        return convertV(3, refSchemas, jsonSchema);
+    }
+}
+
+var convertV = (version: any, refSchemas: any, jsonSchema: any): any => {
 
     if (!_.isPlainObject(jsonSchema)) {
         unsupportedJsonSchema(jsonSchema)
@@ -74,11 +97,12 @@ var convert = (refSchemas: any, jsonSchema: any): any => {
         mongooseRef = typeRefToMongooseType[jsonSchema.$ref],
         isMongooseRef = typeof(mongooseRef) != 'undefined' ? true : false,
         subSchema = _.isEmpty(refSchemas)? false: refSchemas[jsonSchema.$ref]
-
+        subSchemaType = (version == 4) ? subSchemaTypeV4 : subSchemaTypeV3
+    
     return (result =
         isRef
             ? isMongooseRef? mongooseRef
-            : subSchema? convert(refSchemas, subSchema)
+            : subSchema? convertV(version, refSchemas, subSchema)
             : unsupportedRefValue(jsonSchema)
 
         : isTypeDate
@@ -93,12 +117,12 @@ var convert = (refSchemas: any, jsonSchema: any): any => {
         : (jsonSchema.type === 'object')
             ? _.isEmpty(jsonSchema.properties)
                 ? mongoose.Schema.Types.Mixed
-            : ( converted = _.mapValues(jsonSchema.properties, convert.bind(null, refSchemas)),
+            : ( converted = _.mapValues(jsonSchema.properties, convertV.bind(null, version, refSchemas)),
                 jsonSchema.required? (_.mapValues(converted, subSchemaType.bind(null, jsonSchema))): converted )
 
         : (jsonSchema.type === 'array')
             ? !_.isEmpty(jsonSchema.items)
-                ? [convert(refSchemas, jsonSchema.items)]
+                ? [convertV(version, refSchemas, jsonSchema.items)]
             : []
 
         : !_.has(jsonSchema, 'type')
