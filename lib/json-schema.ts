@@ -28,7 +28,9 @@ var subSchemaTypeV4 = (parentSchema, subschema, key) =>
     return (parentSchema.required.indexOf(key) >= 0 )
             ? !_.isPlainObject(subschema) 
                 ? { type: subschema, required: true }
-                : _.assign(subschema, {required: true})
+				: subschema.hasOwnProperty('type')
+					? _.assign(subschema, {required: true})
+					: subschema
             : subschema
 }
 
