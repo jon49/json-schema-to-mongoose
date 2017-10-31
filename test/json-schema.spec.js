@@ -1,75 +1,81 @@
-var createMongooseSchema = require('../lib/json-schema');
-var mongoose = require('mongoose');
-var util = require('util');
-var _ = require('lodash');
-var inspect = util.inspect;
-var Schema = mongoose.Schema;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var assert = require("assert");
+var _ = require("lodash");
+var mongoose = require("mongoose");
+var createMongooseSchema = require("../lib/json-schema");
 describe('mongoose schema conversion:', function () {
     describe('createMongooseSchema', function () {
         _.each([
-            { type: 'objectttttt' },
-            { type: 'object', properties: 'not an object' },
-            { type: 'object',
-                properties: {
-                    email: { type: 'not a type' }
-                } }
+            { type: 'objectttttt' }, {
+                type: 'object', properties: 'not an object'
+            }, {
+                type: 'object', properties: { email: { type: 'not a type' } }
+            }
         ], function (invalid) {
             it('throws when the incorrect type is given', function () {
-                expect(function () { createMongooseSchema(void 0, invalid); }).toThrowError(/Unsupported JSON schema/);
+                assert.throws(function () {
+                    // noinspection VoidExpressionJS
+                    createMongooseSchema(void 0, invalid);
+                }, /Unsupported JSON schema/);
+                // expect(() => {
+                //   createMongooseSchema(void 0, invalid);
+                // }).toThrowError(/Unsupported JSON schema/);
             });
         });
-        _.each([{
-                type: 'object',
-                properties: {
-                    id: { $ref: '#/nope/nope/nope' }
-                } }], function (invalid) {
-            it("throws on unsupported ref, " + invalid, function () {
-                expect(function () { createMongooseSchema(void 0, invalid); }).toThrowError(/Unsupported .ref/);
+        _.each([
+            {
+                type: 'object', properties: { id: { $ref: '#/nope/nope/nope' } }
+            }
+        ], function (invalid) {
+            it('throws on unsupported ref, ' + invalid, function () {
+                assert.throws(function () {
+                    // noinspection VoidExpressionJS
+                    createMongooseSchema(void 0, invalid);
+                }, /Unsupported .ref/);
+                // expect(() => {
+                //   createMongooseSchema(void 0, invalid);
+                // }).toThrowError(/Unsupported .ref/);
             });
         });
         it('should convert a valid json-schema', function () {
             var refs = {
-                yep: {
-                    type: 'string',
-                    pattern: '^\\d{3}$' },
+                yep: { type: 'string', pattern: '^\\d{3}$' },
                 a: {
-                    type: 'array',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            num: { type: 'number' },
-                            str: { type: 'string' }
-                        } } },
-                anyValue: {
-                    description: 'This can be any value.'
+                    type: 'array', items: { type: 'object', properties: { num: { type: 'number' }, str: { type: 'string' } } }
                 },
-                idSpec: {
-                    type: 'object',
-                    properties: {
-                        id: { $ref: 'yep' },
-                        arr: { $ref: 'a' }
-                    } } };
+                anyValue: { description: 'This can be any value.' },
+                idSpec: { type: 'object', properties: { id: { $ref: 'yep' }, arr: { $ref: 'a' } } }
+            };
+            // noinspection ReservedWordAsName
             var valid = {
-                type: 'object',
-                properties: {
-                    id: { $ref: 'yep' },
-                    arr: { $ref: 'a' },
-                    anyValue: { a: 'b' },
-                    address: {
-                        type: 'object',
-                        properties: {
+                type: 'object', properties: {
+                    id: { $ref: 'yep' }, arr: { $ref: 'a' }, anyValue: { a: 'b' }, address: {
+                        type: 'object', properties: {
                             street: { type: 'integer', default: 44, minimum: 0, maximum: 50 },
                             houseColor: { type: 'string', default: '[Function=Date.now]', format: 'date-time' }
-                        } } } };
-            expect(createMongooseSchema(refs, valid)).toEqual({
+                        }
+                    }
+                }
+            };
+            // noinspection ReservedWordAsName
+            assert.deepEqual(createMongooseSchema(refs, valid), {
                 id: { type: String, match: /^\d{3}$/ },
                 arr: [{ num: { type: Number }, str: { type: String } }],
                 anyValue: mongoose.Schema.Types.Mixed,
                 address: {
-                    street: { type: Number, default: 44, min: 0, max: 50 },
-                    houseColor: { type: Date, default: Date.now }
-                } });
+                    street: { type: Number, default: 44, min: 0, max: 50 }, houseColor: { type: Date, default: Date.now }
+                }
+            });
+            // noinspection ReservedWordAsName
+            // expect(createMongooseSchema(refs, valid)).toEqual({
+            //   id: {type: String, match: /^\d{3}$/},
+            //   arr: [{num: {type: Number}, str: {type: String}}],
+            //   anyValue: mongoose.Schema.Types.Mixed,
+            //   address: {
+            //     street: {type: Number, default: 44, min: 0, max: 50}, houseColor: {type: Date, default: Date.now}
+            //   }
+            // });
         });
     });
 });
-//# sourceMappingURL=json-schema.spec.js.map
