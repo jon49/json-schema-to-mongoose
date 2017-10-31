@@ -1,6 +1,4 @@
-﻿/// <reference path="../typings/typings.d.ts" />
-
-import _ = require('lodash');
+﻿import _ = require('lodash');
 import mongoose = require('mongoose');
 
 const typeStringToMongooseType = {'string': String, 'boolean': Boolean, 'number': Number, 'integer': Number};
