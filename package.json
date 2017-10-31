@@ -20,14 +20,14 @@
   "private": false,
   "license": "MIT",
   "dependencies": {
+    "@types/node": "^8.0.47",
+    "@types/lodash": "^4.14.80",
+    "@types/mongoose": "^4.7.24",
     "lodash": "^3.6.0",
     "mongoose": "~4.7.1"
   },
   "devDependencies": {
     "@types/jasmine": "^2.6.2",
-    "@types/lodash": "^4.14.80",
-    "@types/mongoose": "^4.7.24",
-    "@types/node": "^8.0.47",
     "jasmine-node": "^1.14.5"
   },
   "scripts": {
