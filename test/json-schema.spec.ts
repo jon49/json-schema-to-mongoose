@@ -1,7 +1,7 @@
 ﻿import * as assert from 'assert';
 import * as _ from 'lodash';
 import * as mongoose from 'mongoose';
-import * as createMongooseSchema from '../lib/json-schema';
+import createMongooseSchema from '../lib/json-schema';
 
 describe('mongoose schema conversion:', function () {
   describe('createMongooseSchema', function () {

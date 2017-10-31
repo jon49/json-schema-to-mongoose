@@ -1,3 +1,4 @@
 "use strict";
-var createMongooseSchema = require("./lib/json-schema");
-module.exports = createMongooseSchema;
+Object.defineProperty(exports, "__esModule", { value: true });
+var json_schema_1 = require("./lib/json-schema");
+exports.createMongooseSchema = json_schema_1.default;

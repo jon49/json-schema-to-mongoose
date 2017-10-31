@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var createMongooseSchema = require("./lib/json-schema");
+var json_schema_1 = require("./lib/json-schema");
 var refs = {
     yep: {
         type: 'string', pattern: '^\\d{3}$'
@@ -27,5 +27,5 @@ var valid = {
         }
     }
 };
-var result = createMongooseSchema(refs, valid);
+var result = json_schema_1.default(refs, valid);
 console.dir(result, { depth: null });

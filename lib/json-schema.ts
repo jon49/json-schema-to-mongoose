@@ -142,5 +142,5 @@ interface CreateMongooseSchema {
   (refSchemas: any): (jsonSchema: any) => any
 }
 
-const createMongooseSchema = <CreateMongooseSchema> _.curry(convert);
-export = createMongooseSchema
+// noinspection JSUnusedGlobalSymbols
+export default <CreateMongooseSchema> _.curry(convert);

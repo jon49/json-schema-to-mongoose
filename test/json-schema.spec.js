@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var assert = require("assert");
 var _ = require("lodash");
 var mongoose = require("mongoose");
-var createMongooseSchema = require("../lib/json-schema");
+var json_schema_1 = require("../lib/json-schema");
 describe('mongoose schema conversion:', function () {
     describe('createMongooseSchema', function () {
         _.each([
@@ -16,7 +16,7 @@ describe('mongoose schema conversion:', function () {
             it('throws when the incorrect type is given', function () {
                 assert.throws(function () {
                     // noinspection VoidExpressionJS
-                    createMongooseSchema(void 0, invalid);
+                    json_schema_1.default(void 0, invalid);
                 }, /Unsupported JSON schema/);
                 // expect(() => {
                 //   createMongooseSchema(void 0, invalid);
@@ -31,7 +31,7 @@ describe('mongoose schema conversion:', function () {
             it('throws on unsupported ref, ' + invalid, function () {
                 assert.throws(function () {
                     // noinspection VoidExpressionJS
-                    createMongooseSchema(void 0, invalid);
+                    json_schema_1.default(void 0, invalid);
                 }, /Unsupported .ref/);
                 // expect(() => {
                 //   createMongooseSchema(void 0, invalid);
@@ -59,7 +59,7 @@ describe('mongoose schema conversion:', function () {
                 }
             };
             // noinspection ReservedWordAsName
-            assert.deepEqual(createMongooseSchema(refs, valid), {
+            assert.deepEqual(json_schema_1.default(refs, valid), {
                 id: { type: String, match: /^\d{3}$/ },
                 arr: [{ num: { type: Number }, str: { type: String } }],
                 anyValue: mongoose.Schema.Types.Mixed,

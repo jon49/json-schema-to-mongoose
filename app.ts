@@ -1,4 +1,4 @@
-﻿import * as createMongooseSchema from './lib/json-schema';
+﻿import createMongooseSchema from './lib/json-schema';
 
 const refs = {
   yep: {
