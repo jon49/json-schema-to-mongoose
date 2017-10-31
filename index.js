@@ -1,8 +1,6 @@
 "use strict";
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(require("./lib/json-schema"));
-// import createMongooseSchema from './lib/json-schema';
-// export = createMongooseSchema; 
+var json_schema_1 = require("./lib/json-schema");
+// export = createMongooseSchema;
+// noinspection JSUnusedGlobalSymbols
+exports.default = json_schema_1.default;
