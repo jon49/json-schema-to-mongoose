@@ -1,6 +1,6 @@
 {
   "name": "json-schema-to-mongoose",
-    "version": "0.2.4",
+  "version": "0.2.4",
   "description": "A library for converting json-schema to mongoose schema",
   "keywords": [
     "json_schema",
@@ -24,7 +24,7 @@
     "mongoose": "~4.7.1"
   },
   "devDependencies": {
-    "jasmine-node": "^2.0.0"
+    "jasmine-node": "^1.14.5"
   },
   "scripts": {
     "test": "node_modules/.bin/jasmine-node ./test",

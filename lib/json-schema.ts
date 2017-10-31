@@ -1,144 +1,148 @@
 ﻿/// <reference path="../typings/typings.d.ts" />
 
-import mongoose = require('mongoose')
-import _ = require('lodash')
+import _ = require('lodash');
+import mongoose = require('mongoose');
 
-var typeStringToMongooseType = {
-    'string': String,
-    'boolean': Boolean,
-    'number': Number,
-    'integer': Number
-}
+const typeStringToMongooseType = {'string': String, 'boolean': Boolean, 'number': Number, 'integer': Number};
 
-var typeRefToMongooseType = {
-    '#/definitions/objectid': mongoose.Schema.Types.ObjectId,
-    '#/definitions/dateOrDatetime': Date
-    
-}
+const typeRefToMongooseType = {
+  '#/definitions/objectid': mongoose.Schema.Types.ObjectId, '#/definitions/dateOrDatetime': Date
+};
 
-var subSchemaTypeV3 = (parentSchema, subschema, key) =>
-{
-    return (parentSchema.required.indexOf(key) >= 0 && !_.isPlainObject(subschema))?
-           { type: subschema, required: true }
-           : subschema
-}
+const subSchemaTypeV3 = (parentSchema, subschema, key) => {
+  return (0 <= parentSchema.required.indexOf(key) && !_.isPlainObject(subschema)) ? {
+    type: subschema, required: true
+  } : subschema;
+};
 
-var subSchemaTypeV4 = (parentSchema, subschema, key) =>
-{
-    return (parentSchema.required.indexOf(key) >= 0 )
-            ? !_.isPlainObject(subschema) 
-                ? { type: subschema, required: true }
-				: subschema.hasOwnProperty('type')
-					?_.assign(subschema, {required: true})
-					: subschema
-            : subschema
-}
+const subSchemaTypeV4 = (parentSchema, subschema, key) => {
+  return (0 <= parentSchema.required.indexOf(key) ) ? !_.isPlainObject(subschema) ? {
+    type: subschema, required: true
+  } : subschema.hasOwnProperty('type') ? _.assign(subschema, {required: true}) : subschema : subschema;
+};
 
-var schemaParamsToMongoose =
-{
-    /**
-    * default value
-    */
-    default: (default_: string) =>
-    {
-        var func = (_.last(/^\[Function=(.+)\]$/.exec(default_)) || '')
-            .replace(/\\_/g, '`underscore`')
-            .replace(/_/g, ' ')
-            .replace(/`underscore`/g, '_')
-        return {
-            default: eval(func) || default_
-        }
-    },
+// noinspection ReservedWordAsName
+const schemaParamsToMongoose = {
+  /**
+   * default value
+   */
+  default: (default_: string) => {
+    const func = (_.last(/^\[Function=(.+)\]$/.exec(default_)) || '')
+    .replace(/\\_/g, '`underscore`')
+    .replace(/_/g, ' ')
+    .replace(/`underscore`/g, '_');
 
-    /**
-    * Pattern for value to match
-    */
-    pattern: (pattern: string) => { return {match: RegExp(pattern)} },
+    // noinspection ReservedWordAsName,DynamicallyGeneratedCodeJS
+    return {default: eval(func) || default_};
+  },
 
-    type: (type: string) => { return {type: typeStringToMongooseType[type]} },
+  /**
+   * Pattern for value to match
+   */
+  pattern: (pattern: string) => ({match: RegExp(pattern)}),
+  type: (type: string) => ({type: typeStringToMongooseType[type]}),
+  minLength: (min: number) => ({minlength: min}),
+  maxLength: (max: number) => ({maxlength: max}),
+  minimum: (min: number) => ({min: min}),
+  maximum: (max: number) => ({max: max}),
+  enum: (members: any[]) => ({enum: members})
+};
 
-    minLength: (min: number) => { return {minlength: min} },
-    maxLength: (max: number) => { return {maxlength: max} },
-    minimum: (min: number) => { return {min: min} },
-    maximum: (max: number) => { return {max: max} },
-    enum: (members: any[]) => { return {enum: members} }
-}
+const toMongooseParams = (acc, val, key) => {
+  let func;
 
-var toMongooseParams = (acc, val, key) => {
-    var func
-    return (func = schemaParamsToMongoose[key])? _.assign(acc, func(val)): acc
-}
+  // noinspection AssignmentResultUsedJS
+  return (func = schemaParamsToMongoose[key]) ? _.assign(acc, func(val)) : acc;
+};
 
-var unsupportedRefValue = (jsonSchema) => { throw new Error("Unsupported $ref value: " + jsonSchema.$ref) }
-var unsupportedJsonSchema = (jsonSchema) => { throw new Error('Unsupported JSON schema type, `' + jsonSchema.type + '`') }
-var convert = (refSchemas: any, jsonSchema: any): any => {
-    
-    if (jsonSchema.$schema === 'http://json-schema.org/draft-03/schema#') {
-        return convertV(3, refSchemas, jsonSchema);
-    }
-    else if (jsonSchema.$schema === 'http://json-schema.org/draft-04/schema#') {
-        return convertV(4, refSchemas, jsonSchema);
-    }
+const unsupportedRefValue = (jsonSchema) => {
+  throw new Error('Unsupported $ref value: ' + jsonSchema.$ref);
+};
+
+const unsupportedJsonSchema = (jsonSchema) => {
+  throw new Error('Unsupported JSON schema type, `' + jsonSchema.type + '`');
+};
+
+const convertV = (version: any, refSchemas: any, jsonSchema: any): any => {
+
+  if (!_.isPlainObject(jsonSchema)) {
+    unsupportedJsonSchema(jsonSchema);
+  }
+
+  let converted,
+    result,
+    format = jsonSchema.format,
+    isRef = !_.isEmpty(jsonSchema.$ref),
+    isTypeDate = ('string' === jsonSchema.type) && (('date' === format) || ('date-time' === format)),
+    mongooseRef = typeRefToMongooseType[jsonSchema.$ref],
+    isMongooseRef = ('undefined' != typeof(mongooseRef)),
+    subSchema = _.isEmpty(refSchemas) ? false : refSchemas[jsonSchema.$ref],
+    subSchemaType = (4 == version) ? subSchemaTypeV4 : subSchemaTypeV3;
+
+  return (result =
+      isRef ?
+        isMongooseRef ?
+          mongooseRef :
+          subSchema ?
+            convertV(version, refSchemas, subSchema) :
+            unsupportedRefValue(jsonSchema)
+
+        :
+        isTypeDate ?
+          _.reduce(<any> _.omit(jsonSchema, 'type', 'format'), toMongooseParams, {type: typeRefToMongooseType['#/definitions/dateOrDatetime']})
+
+          :
+          _.has(typeStringToMongooseType, jsonSchema.type) ?
+            _.reduce(jsonSchema, toMongooseParams, {})
+
+            :
+            (jsonSchema.type === 'object') ?
+              _.isEmpty(jsonSchema.properties) ?
+                mongoose.Schema.Types.Mixed :
+                ( converted =
+                  _.mapValues(jsonSchema.properties, convertV.bind(null, version, refSchemas)), jsonSchema.required ?
+                  (_.mapValues(converted, subSchemaType.bind(null, jsonSchema))) :
+                  converted )
+
+              :
+              (jsonSchema.type === 'array') ?
+                !_.isEmpty(jsonSchema.items) ?
+                  [convertV(version, refSchemas, jsonSchema.items)] :
+                  []
+
+                :
+                !_.has(jsonSchema, 'type') ?
+                  mongoose.Schema.Types.Mixed :
+                  unsupportedJsonSchema(jsonSchema)
+  );
+};
+
+const convert = (refSchemas: any, jsonSchema: any): any => {
+  let version = 3;
+
+  switch (jsonSchema.$schema) {
+    case 'http://json-schema.org/draft-03/schema#':
+      version = 3;
+      break;
+
+    case 'http://json-schema.org/draft-04/schema#':
+      version = 4;
+      break;
+
     // backwards compatibility
-    else {
-        return convertV(3, refSchemas, jsonSchema);
-    }
-}
+    default:
+      version = 3;
+      break;
+  }
 
-var convertV = (version: any, refSchemas: any, jsonSchema: any): any => {
-
-    if (!_.isPlainObject(jsonSchema)) {
-        unsupportedJsonSchema(jsonSchema)
-    }
-
-    var converted,
-        result,
-        format = jsonSchema.format,
-        isRef = !_.isEmpty(jsonSchema.$ref),
-        isTypeDate = jsonSchema.type === 'string' && (format === 'date' || format === 'date-time'),
-        mongooseRef = typeRefToMongooseType[jsonSchema.$ref],
-        isMongooseRef = typeof(mongooseRef) != 'undefined' ? true : false,
-        subSchema = _.isEmpty(refSchemas)? false: refSchemas[jsonSchema.$ref]
-        subSchemaType = (version == 4) ? subSchemaTypeV4 : subSchemaTypeV3
-    
-    return (result =
-        isRef
-            ? isMongooseRef? mongooseRef
-            : subSchema? convertV(version, refSchemas, subSchema)
-            : unsupportedRefValue(jsonSchema)
-
-        : isTypeDate
-            ? _.reduce (
-                <any> _.omit(jsonSchema, 'type', 'format'),
-                toMongooseParams,
-                {type: typeRefToMongooseType['#/definitions/dateOrDatetime']} )
-
-        : _.has(typeStringToMongooseType, jsonSchema.type)
-            ? _.reduce(jsonSchema, toMongooseParams, {})
-
-        : (jsonSchema.type === 'object')
-            ? _.isEmpty(jsonSchema.properties)
-                ? mongoose.Schema.Types.Mixed
-            : ( converted = _.mapValues(jsonSchema.properties, convertV.bind(null, version, refSchemas)),
-                jsonSchema.required? (_.mapValues(converted, subSchemaType.bind(null, jsonSchema))): converted )
-
-        : (jsonSchema.type === 'array')
-            ? !_.isEmpty(jsonSchema.items)
-                ? [convertV(version, refSchemas, jsonSchema.items)]
-            : []
-
-        : !_.has(jsonSchema, 'type')
-            ? mongoose.Schema.Types.Mixed
-
-        : unsupportedJsonSchema(jsonSchema)
-    )
-}
+  return convertV(version, refSchemas, jsonSchema);
+};
 
 interface CreateMongooseSchema {
-    (refSchemas: any, jsonSchema: any): any
-    (refSchemas: any): (jsonSchema: any) => any
+  (refSchemas: any, jsonSchema: any): any
+
+  (refSchemas: any): (jsonSchema: any) => any
 }
 
-var createMongooseSchema = <CreateMongooseSchema> _.curry(convert)
-
+const createMongooseSchema = <CreateMongooseSchema> _.curry(convert);
 export = createMongooseSchema
