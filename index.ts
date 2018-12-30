@@ -1,4 +1,4 @@
-﻿/// <reference path="typings/typings.d.ts" />
-
-import createMongooseSchema = require('./lib/json-schema')
-export = createMongooseSchema
+﻿import createMongooseSchema from './lib/json-schema';
+// export = createMongooseSchema;
+// noinspection JSUnusedGlobalSymbols
+export default createMongooseSchema;

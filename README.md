@@ -9,22 +9,19 @@ conversion.
 
 ## Installation
 
-    npm install json-schema-to-mongoose --save
+    npm install https://github.com/agrozyme/json-schema-to-mongoose.git
 
 ## Usage
 
 ```typescript
-/// <reference path="../node_modules/json-schema-to-mongoose/json-schema-to-mongoose.d.ts" />
-
-import createMongooseSchema = require('./lib/json-schema')
-import util = require('util')
+import createMongooseSchema from 'json-schema-to-mongoose';
 
 // Or use plain javascript
-// var createMongooseSchema = require('./lib/json-schema')
-// var util = require('util')
+// var createMongooseSchema = require('json-schema-to-mongoose').default;
+// var util = require('util');
 
 // example json-schema references
-var refs =
+const refs =
 {
     yep:
     {
@@ -41,10 +38,10 @@ var refs =
             }
         }
     }
-}
+};
 
 // example schema to convert to mongoose schema
-var schema =
+const schema =
 {
     type: 'object',
     properties:
@@ -63,10 +60,10 @@ var schema =
             }
         }
     }
-}
+};
 
 //Convert the schema
-var mongooseSchema = createMongooseSchema(refs, schema)
+const mongooseSchema = createMongooseSchema(refs, schema);
 
 //Alternative syntax, which makes it so you can convert many at one time.
 
@@ -78,8 +75,8 @@ var mongooseSchema = createMongooseSchema(refs, schema)
 //     return mongooseSchemas.concat(convert(schema))
 // }, []))
 
-console.log(util.inspect(mongooseSchema, false, null))
+console.dir(mongooseSchema, {depth: null});
 
-var Schema = new mongoose.Schema(mongooseSchema)
+const Schema = new mongoose.Schema(mongooseSchema);
 
 ```
