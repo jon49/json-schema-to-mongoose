@@ -24,7 +24,7 @@
     "@types/lodash": "^4.14.80",
     "@types/mongoose": "^4.7.24",
     "lodash": "^3.6.0",
-    "mongoose": "~4.7.1"
+    "mongoose": "^5.0.0"
   },
   "devDependencies": {
     "@types/jasmine": "^2.6.2",
